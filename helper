@@ -1,0 +1,20 @@
+verbosemake() {
+
+	make "$@"
+
+	# retry with verbose output
+	if [ $? -ne 0 ]; then
+		make "$@" V=s
+	fi
+}
+
+cleanup() {
+	CLEANUPDIR="$1"
+
+	if [ ! -d "$CLEANUPDIR" ]; then
+		return
+	fi
+
+	rm -rf ${BUILDDIR}
+	/bin/true	# do not care about cleanup errors
+}
