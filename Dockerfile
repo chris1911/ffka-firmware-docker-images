@@ -31,8 +31,8 @@ RUN	\
 	echo >> /etc/apt/apt.conf.d/00aptitude 'APT::Install-Recommends "0";' && \
 	echo >> /etc/apt/apt.conf.d/00aptitude 'APT::Install-Suggests "0";' && \
 	apt-get -y update && \
-	apt-get -y install bsdmainutils build-essential ca-certificates cmake file \
-			   flex gawk gettext git less liblzma-dev liblzma5 libncurses5-dev \
+	apt-get -y install bsdmainutils build-essential ca-certificates cmake file flex \
+			   gawk gettext git less liblzma-dev liblzma5 libncurses5-dev libssl-dev \
 			   p7zip-full pkg-config python subversion sudo unzip vim wget zlib1g-dev
 
 RUN	\
@@ -41,10 +41,6 @@ RUN	\
 	chown gluonbuilder:gluonbuilder -R ${BASEDIR} && \
 	echo 'gluonbuilder  ALL=(ALL:ALL) NOPASSWD: ALL' >> /etc/sudoers
 
-
-# some build and cleanup helper
-ADD	helper /gluon/helper
-RUN	echo "source /gluon/helper" >> /home/gluonbuilder/.bashrc
 
 # openwrt: use unprivileged user to build sources (or fail if root)
 USER gluonbuilder
@@ -59,48 +55,48 @@ RUN	cd ${BUILDDIR} && \
 	git clone -b ${SITE_BRANCH}  ${SITE}  ${BUILDDIR}/site && \
 	\
 	export NPROC=$(nproc) && \
-	verbosemake -C ${BUILDDIR} update
+	make -C ${BUILDDIR} update
 
 RUN	export GLUON_TARGET=ar71xx-generic && \
-	verbosemake -C ${BUILDDIR} clean GLUON_TARGET=${GLUON_TARGET} && \
-	verbosemake -C ${BUILDDIR} -j $NPROC GLUON_TARGET=${GLUON_TARGET}
+	make -C ${BUILDDIR} clean GLUON_TARGET=${GLUON_TARGET} && \
+	make -C ${BUILDDIR} -j $NPROC GLUON_TARGET=${GLUON_TARGET}
 	
 RUN	export GLUON_TARGET=ar71xx-nand && \
-	verbosemake -C ${BUILDDIR} clean GLUON_TARGET=${GLUON_TARGET} && \
-	verbosemake -C ${BUILDDIR} -j $NPROC GLUON_TARGET=${GLUON_TARGET}
+	make -C ${BUILDDIR} clean GLUON_TARGET=${GLUON_TARGET} && \
+	make -C ${BUILDDIR} -j $NPROC GLUON_TARGET=${GLUON_TARGET}
 
 RUN	export GLUON_TARGET=brcm2708-bcm2708 && \
-	verbosemake -C ${BUILDDIR} clean GLUON_TARGET=${GLUON_TARGET} && \
-	verbosemake -C ${BUILDDIR} -j $NPROC GLUON_TARGET=${GLUON_TARGET}
+	make -C ${BUILDDIR} clean GLUON_TARGET=${GLUON_TARGET} && \
+	make -C ${BUILDDIR} -j $NPROC GLUON_TARGET=${GLUON_TARGET}
 
 RUN	export GLUON_TARGET=brcm2708-bcm2709 && \
-	verbosemake -C ${BUILDDIR} clean GLUON_TARGET=${GLUON_TARGET} && \
-	verbosemake -C ${BUILDDIR} -j $NPROC GLUON_TARGET=${GLUON_TARGET}
+	make -C ${BUILDDIR} clean GLUON_TARGET=${GLUON_TARGET} && \
+	make -C ${BUILDDIR} -j $NPROC GLUON_TARGET=${GLUON_TARGET}
 
 RUN	export GLUON_TARGET=mpc85xx-generic && \
-	verbosemake -C ${BUILDDIR} clean GLUON_TARGET=${GLUON_TARGET} && \
-	verbosemake -C ${BUILDDIR} -j $NPROC GLUON_TARGET=${GLUON_TARGET}
+	make -C ${BUILDDIR} clean GLUON_TARGET=${GLUON_TARGET} && \
+	make -C ${BUILDDIR} -j $NPROC GLUON_TARGET=${GLUON_TARGET}
 
 RUN	export GLUON_TARGET=x86-64 && \
-	verbosemake -C ${BUILDDIR} clean GLUON_TARGET=${GLUON_TARGET} && \
-	verbosemake -C ${BUILDDIR} -j $NPROC GLUON_TARGET=${GLUON_TARGET}
+	make -C ${BUILDDIR} clean GLUON_TARGET=${GLUON_TARGET} && \
+	make -C ${BUILDDIR} -j $NPROC GLUON_TARGET=${GLUON_TARGET}
 
 RUN	export GLUON_TARGET=x86-generic && \
-	verbosemake -C ${BUILDDIR} clean GLUON_TARGET=${GLUON_TARGET} && \
-	verbosemake -C ${BUILDDIR} -j $NPROC GLUON_TARGET=${GLUON_TARGET}
+	make -C ${BUILDDIR} clean GLUON_TARGET=${GLUON_TARGET} && \
+	make -C ${BUILDDIR} -j $NPROC GLUON_TARGET=${GLUON_TARGET}
 
 RUN	export GLUON_TARGET=x86-kvm_guest && \
-	verbosemake -C ${BUILDDIR} clean GLUON_TARGET=${GLUON_TARGET} && \
-	verbosemake -C ${BUILDDIR} -j $NPROC GLUON_TARGET=${GLUON_TARGET}
+	make -C ${BUILDDIR} clean GLUON_TARGET=${GLUON_TARGET} && \
+	make -C ${BUILDDIR} -j $NPROC GLUON_TARGET=${GLUON_TARGET}
 
 RUN	export GLUON_TARGET=x86-xen_domu && \
-	verbosemake -C ${BUILDDIR} clean GLUON_TARGET=${GLUON_TARGET} && \
-	verbosemake -C ${BUILDDIR} -j $NPROC GLUON_TARGET=${GLUON_TARGET}
+	make -C ${BUILDDIR} clean GLUON_TARGET=${GLUON_TARGET} && \
+	make -C ${BUILDDIR} -j $NPROC GLUON_TARGET=${GLUON_TARGET}
 
-RUN	cd ${BUILDDIR}/images/factory    && md5sum -b * > md5.txt && \
-	cd ${BUILDDIR}/images/sysupgrade && md5sum -b * > md5.txt && \
-	verbosemake -C ${BUILDDIR} manifest GLUON_BRANCH=stable && \
-	7z a -t7z -mx=9 -ms=on ${BASEDIR}/images-${GLUON_BRANCH}-${GLUON_TARGET}.7z ${BUILDDIR}/images/
+RUN	cd ${BUILDDIR}/output/images/factory    && md5sum -b * > md5.txt && \
+	cd ${BUILDDIR}/output/images/sysupgrade && md5sum -b * > md5.txt && \
+	make -C ${BUILDDIR} manifest GLUON_BRANCH=stable && \
+	7z a -t7z -mx=9 -ms=on ${BASEDIR}/images-${GLUON_BRANCH}-${GLUON_TARGET}.7z ${BUILDDIR}/output/images/
 
 # The compiled images and the yet to be signed manifest can be found in ${BUILDDIR}/images/
 CMD /bin/bash

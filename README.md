@@ -8,34 +8,34 @@ If you just want to get the latest ffka firmware, you'll better be off [here](ht
 The intent for this Dockerfile is to build the firmware images in an isolated environment and keep the host clean of build tools.
 This is quite simple with Docker:
 
-```prerequisite: docker (package may be called docker, docker.io, lxc-docker, ...)```
+	prerequisite: docker (package may be called docker, docker.io, lxc-docker, ...)
 
 Modify the Dockerfile:
 
 * Choose versions:
 	* GLUON_BRANCH - e.g.v2016.2, see [gluon releases](https://github.com/freifunk-gluon/gluon/releases)
 	* SITE_BRANCH - e.g. v0.2.90-stable.1, see [ffka-site releases](https://github.com/ffka/site-ffka/releases) - please stick with stable versions
-* Choose targets:
-Commenting out the 3-liner for each unwanted target will speed up compilation time.
+* Choose targets: Commenting out the following 3-liner for each unwanted target will speed up compilation time.
 
-    RUN     export GLUON_TARGET=ar71xx-generic && \
-
-		        verbosemake -C ${BUILDDIR} clean GLUON_TARGET=${GLUON_TARGET}
-
+		RUN     export GLUON_TARGET=<TARGET> && \
+		        verbosemake -C ${BUILDDIR} clean GLUON_TARGET=${GLUON_TARGET} && \
 	        	verbosemake -C ${BUILDDIR} -j $NPROC GLUON_TARGET=${GLUON_TARGET}
 	
-Let Docker build the image for you. This may take some (or lots of) time.
+Let Docker build the image(s) for you. This may take some (or lots of) time.
 
-```docker.io build -t <tag name> <path to dir containing Dockerfile>```
+Compiling during the image creation is quite uncommon for docker, but dockers layer caching mechanism yields great benefits when recompiling.
+When recreating the docker image, the previous steps are not performed again; the cached layer is used instead.
 
-Create a container based on the image:
+	docker build -t <tag name> <path to dir containing Dockerfile>
 
-```docker run -ti <tag name> /bin/bash```
+The firmware images are now within a docker image. Create a container based on the image and add a volume to it. The 'local dir' is mapped to /hostdir in the container.
 
-You now have a shell started inside the container. You already know the path to the gluon installation:
+	docker run -ti -v <local dir>:/hostdir <tag name> /bin/bash
 
-```cd  /gluon/<GLUON_TARGET>```
+You now have a shell started inside the container and can copy the images and manifest to your host sytem:
 
-To get rolling (firmware building), please have a look at the essential build commands in the Dockerfile.
+	cp  -a /gluon/build/output /hostdir
+
+What's left is signing the manifest and the deployment.
 
 Happy firmware building!
